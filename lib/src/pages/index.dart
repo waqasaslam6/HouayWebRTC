@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:agora_rtc_engine/rtc_engine.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -31,7 +30,7 @@ class IndexState extends State<IndexPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Agora Flutter QuickStart'),
+        title: Text('Houay WebRTC'),
       ),
       body: Center(
         child: Container(
@@ -86,15 +85,45 @@ class IndexState extends State<IndexPage> {
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 20),
                 child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
-                    Expanded(
-                      child: RaisedButton(
-                        onPressed: onJoin,
-                        child: Text('Join'),
-                        color: Colors.blueAccent,
-                        textColor: Colors.white,
+                    Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                          color: Colors.green, shape: BoxShape.circle),
+                      child: Center(
+                        child: IconButton(
+                            icon: Icon(
+                              Icons.phone,
+                              color: Colors.white,
+                              size: 30,
+                            ),
+                            onPressed: () {
+                              onJoin(false);
+                            }),
                       ),
-                    )
+                    ),
+                    SizedBox(
+                      width: 20,
+                    ),
+                    Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                          color: Colors.red, shape: BoxShape.circle),
+                      child: Center(
+                        child: IconButton(
+                            icon: Icon(
+                              Icons.video_call_outlined,
+                              color: Colors.white,
+                              size: 30,
+                            ),
+                            onPressed: () {
+                              onJoin(true);
+                            }),
+                      ),
+                    ),
                   ],
                 ),
               )
@@ -105,7 +134,7 @@ class IndexState extends State<IndexPage> {
     );
   }
 
-  Future<void> onJoin() async {
+  Future<void> onJoin(bool enableVideo) async {
     // update input validation
     setState(() {
       _channelController.text.isEmpty
@@ -123,6 +152,7 @@ class IndexState extends State<IndexPage> {
           builder: (context) => CallPage(
             channelName: _channelController.text,
             role: _role,
+            enableVideo: enableVideo,
           ),
         ),
       );

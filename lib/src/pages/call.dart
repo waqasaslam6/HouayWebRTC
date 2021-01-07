@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:agora_rtc_engine/rtc_engine.dart';
 import 'package:agora_rtc_engine/rtc_local_view.dart' as RtcLocalView;
@@ -6,6 +7,7 @@ import 'package:agora_rtc_engine/rtc_remote_view.dart' as RtcRemoteView;
 import 'package:flutter/material.dart';
 
 import '../utils/settings.dart';
+import 'package:http/http.dart' as http;
 
 class CallPage extends StatefulWidget {
   /// non-modifiable channel name of the page
@@ -14,8 +16,10 @@ class CallPage extends StatefulWidget {
   /// non-modifiable client role of the page
   final ClientRole role;
 
+  final bool enableVideo;
+
   /// Creates a call page with given channel name.
-  const CallPage({Key key, this.channelName, this.role}) : super(key: key);
+  const CallPage({Key key, this.channelName, this.role, this.enableVideo}) : super(key: key);
 
   @override
   _CallPageState createState() => _CallPageState();
@@ -26,6 +30,7 @@ class _CallPageState extends State<CallPage> {
   final _infoStrings = <String>[];
   bool muted = false;
   RtcEngine _engine;
+  String token;
 
   @override
   void dispose() {
@@ -42,7 +47,28 @@ class _CallPageState extends State<CallPage> {
     super.initState();
     // initialize agora sdk
     initialize();
+
   }
+  
+ Future fetchToken()async
+  {
+   final response =await http.get("http://programmablesms.com/token.php");
+
+   if(response.statusCode ==200)
+     {
+       var tokenResponse = json.decode(response.body);
+       token = tokenResponse["token"];
+
+       return token;
+     }
+   else
+     {
+       print("not token found");
+     }
+
+
+  }
+  
 
   Future<void> initialize() async {
     if (APP_ID.isEmpty) {
@@ -50,7 +76,7 @@ class _CallPageState extends State<CallPage> {
         _infoStrings.add(
           'APP_ID missing, please provide your APP_ID in settings.dart',
         );
-        _infoStrings.add('Agora Engine is not starting');
+        _infoStrings.add('WebRTC Engine is not starting');
       });
       return;
     }
@@ -61,18 +87,29 @@ class _CallPageState extends State<CallPage> {
     VideoEncoderConfiguration configuration = VideoEncoderConfiguration();
     configuration.dimensions = VideoDimensions(1920, 1080);
     await _engine.setVideoEncoderConfiguration(configuration);
-    await _engine.joinChannel(Token, widget.channelName, null, 0);
+    await fetchToken().then((value) {
+      token = value;
+    });
+    await _engine.joinChannel(token, widget.channelName, null, 0);
   }
 
-  /// Create agora sdk instance and initialize
+  /// Create webrtc instance and initialize
   Future<void> _initAgoraRtcEngine() async {
     _engine = await RtcEngine.create(APP_ID);
-    await _engine.enableVideo();
+    if(widget.enableVideo)
+      {
+        await _engine.enableVideo();
+      }
+    else
+      {
+        await _engine.enableAudio();
+      }
     await _engine.setChannelProfile(ChannelProfile.LiveBroadcasting);
-    await _engine.setClientRole(widget.role);
+    await _engine.setClientRole(ClientRole.Broadcaster);
   }
 
-  /// Add agora event handlers
+
+  /// Addw webrtc event handlers
   void _addAgoraEventHandlers() {
     _engine.setEventHandler(RtcEngineEventHandler(error: (code) {
       setState(() {
@@ -291,7 +328,7 @@ class _CallPageState extends State<CallPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Agora Flutter QuickStart'),
+        title: Text('Houay WebRTC'),
       ),
       backgroundColor: Colors.black,
       body: Center(

@@ -1,3 +1,2 @@
 /// Define App ID and Token
-const APP_ID = Your_App_ID;
-const Token = Your_Token;
+const APP_ID = "60ee6e4c4ea9485ab3d49ee649947ad0";
